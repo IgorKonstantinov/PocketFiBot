@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     CLAIM_RETRY: int = 3
     SLEEP_BETWEEN_CLAIM: int = 180
 
+    RANDOM_LONG_SLEEP: list[int] = [600, 900]
+
     USE_PROXY_FROM_FILE: bool = False
 
 

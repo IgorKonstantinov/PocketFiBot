@@ -3,12 +3,14 @@ from time import time
 from datetime import datetime
 from urllib.parse import unquote
 
+import random
 import aiohttp
 from aiohttp_proxy import ProxyConnector
 from better_proxy import Proxy
 from pyrogram import Client
 from pyrogram.errors import Unauthorized, UserDeactivated, AuthKeyUnregistered
 from pyrogram.raw.functions.messages import RequestWebView
+
 
 from bot.config import settings
 from bot.utils import logger
@@ -69,7 +71,7 @@ class Claimer:
 
     async def get_mining_data(self, http_client: aiohttp.ClientSession) -> dict[str]:
         try:
-            response = await http_client.get('https://bot.pocketfi.org/mining/getUserMining')
+            response = await http_client.get('https://gm.pocketfi.org/mining/getUserMining')
             response.raise_for_status()
 
             response_json = await response.json()
@@ -82,7 +84,7 @@ class Claimer:
 
     async def send_claim(self, http_client: aiohttp.ClientSession) -> bool:
         try:
-            response = await http_client.post('https://bot.pocketfi.org/mining/claimMining', json={})
+            response = await http_client.post('https://gm.pocketfi.org/mining/claimMining', json={})
             response.raise_for_status()
 
             return True
@@ -94,7 +96,7 @@ class Claimer:
 
     async def get_list_of_tasks(self, http_client: aiohttp.ClientSession):
         try:
-            response = await http_client.get('https://bot.pocketfi.org/mining/taskExecuting')
+            response = await http_client.get('https://bot2.pocketfi.org/mining/taskExecuting')
             response.raise_for_status()
 
             response_json = await response.json()
@@ -107,7 +109,7 @@ class Claimer:
 
     async def send_claim_daily_reward(self, http_client: aiohttp.ClientSession, day) -> bool:
         try:
-            response = await http_client.post('https://bot.pocketfi.org/boost/activateDailyBoost', json={})
+            response = await http_client.post('https://bot2.pocketfi.org/boost/activateDailyBoost', json={})
             response.raise_for_status()
 
             response_json = await response.json()
@@ -142,6 +144,13 @@ class Claimer:
 
             while True:
                 try:
+                    #Randomize variables
+                    random_long_sleep = random.randint(*settings.RANDOM_LONG_SLEEP)
+
+                    if http_client.closed:
+                        proxy_conn = ProxyConnector().from_url(proxy) if proxy else None
+                        http_client = aiohttp.ClientSession(headers=headers, connector=proxy_conn)
+
                     if time() - access_token_created_time >= 3600:
                         tg_web_data = await self.get_tg_web_data(proxy=proxy)
 
@@ -177,12 +186,6 @@ class Claimer:
                             else:
                                 logger.error(f"{self.session_name} | Claiming daily reward for day Nr {daily_tasks_current_day + 1}: FAILED")
 
-                        #print(json.dumps(list_of_tasks_daily, indent=4, sort_keys=True))
-                        #print(get_daily_reward_task(list_of_tasks_daily))
-
-                        #print(json.dumps(response_dict, indent=4, sort_keys=True))
-                        #exit()
-
                     mining_data = await self.get_mining_data(http_client=http_client)
 
                     balance = mining_data['gotAmount']
@@ -211,17 +214,18 @@ class Claimer:
 
                             logger.info(f"{self.session_name} | Retry <y>{retry}</y> of <e>{settings.CLAIM_RETRY}</e>")
                             retry += 1
+                    else:
+                        logger.info(f"{self.session_name} | sleep {random_long_sleep:,}s")
+                        await asyncio.sleep(delay=random_long_sleep)
 
                 except InvalidSession as error:
                     raise error
 
                 except Exception as error:
                     logger.error(f"{self.session_name} | Unknown error: {error}")
-                    await asyncio.sleep(delay=3)
-
-                else:
-                    logger.info(f"Sleep 1min")
-                    await asyncio.sleep(delay=60)
+                    access_token_created_time = 0
+                    await asyncio.sleep(delay=30)
+                    await http_client.close()
 
 
 async def run_claimer(tg_client: Client, proxy: str | None):

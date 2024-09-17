@@ -7,10 +7,8 @@ class Settings(BaseSettings):
     API_ID: int
     API_HASH: str
 
-    CLAIM_RETRY: int = 3
-    SLEEP_BETWEEN_CLAIM: int = 180
-
-    RANDOM_LONG_SLEEP: list[int] = [600, 900]
+    RANDOM_SLEEP: list[int] = [10, 15]
+    RANDOM_LONG_SLEEP: list[int] = [60*30, 60*60]
 
     USE_PROXY_FROM_FILE: bool = False
 

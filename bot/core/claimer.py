@@ -213,10 +213,10 @@ class Claimer:
                             balance = mining_data['gotAmount']
                             logger.success(f"{self.session_name} | Successful claim | "
                                            f"Balance: <c>{balance}</c> (<g>+{available:.2f}</g>)")
-
                     else:
                         logger.info(f"{self.session_name} | not enough available: {available:.2f}")
-                        await http_client.close()
+
+                    await http_client.close()
 
                 else:
                     logger.info(f"{self.session_name} | It's time for sleep...")

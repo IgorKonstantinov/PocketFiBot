@@ -19,11 +19,16 @@ from bot.utils.daily import get_daily_reward_task
 from bot.exceptions import InvalidSession
 from .headers import headers
 
+
 def is_time_allowed():
-    current_time = datetime.now().time()
-    if current_time >= time(0, 0) and current_time < time(6, 0):
-        return False
-    return True
+    if settings.SLEEP_EMULATION:
+        current_time = datetime.now().time()
+        if time(0, 0) <= current_time < time(6, 0):
+            return False
+        return True
+    else:
+        return True
+
 
 
 class Claimer:
@@ -197,14 +202,14 @@ class Claimer:
                         else:
                             logger.error(f"{self.session_name} | Claiming daily reward for day Nr {daily_tasks_current_day + 1}: FAILED")
 
-                    balance = mining_data['gotAmount']
-                    available = mining_data['miningAmount']
-                    speed = mining_data['speed']
+                    balance = mining_data.get('gotAmount', 0)
+                    available = mining_data.get('miningAmount', 0)
+                    speed = mining_data.get('speed', 0)
 
                     logger.info(f"{self.session_name} | Balance: <c>{balance}</c> | "
                                 f"Available: <e>{available:.2f}</e> | Speed: <m>{speed}</m>")
 
-                    if available > 1:
+                    if available > 0:
                         status = await self.send_claim(http_client=http_client)
                         await asyncio.sleep(delay=random_sleep)
                         if status:

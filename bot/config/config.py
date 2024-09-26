@@ -8,8 +8,9 @@ class Settings(BaseSettings):
     API_HASH: str
 
     RANDOM_SLEEP: list[int] = [10, 15]
-    RANDOM_LONG_SLEEP: list[int] = [60*30, 60*60]
+    RANDOM_LONG_SLEEP: list[int] = [1*60*60, 3*60*60]
 
+    SLEEP_EMULATION: bool = True
     USE_PROXY_FROM_FILE: bool = False
 
 

@@ -113,14 +113,16 @@ class Claimer:
 
     async def get_list_of_tasks(self, http_client: aiohttp.ClientSession):
         try:
+            params = { 'boostType': 'general' }
             logger.info(f"{self.session_name} | bot action: [{inspect.currentframe().f_code.co_name}]")
-            response = await http_client.get('https://bot2.pocketfi.org/mining/taskExecuting')
-            response.raise_for_status()
+            response = await http_client.get('https://rubot.pocketfi.org/boost/tasks', params=params)
+            if response.ok:
+                response.raise_for_status()
+                response_json = await response.json()
+                return response_json
+            else:
+                return {}
 
-            response_json = await response.json()
-            #all_tasks_data = response_json.get('tasks')
-
-            return response_json
         except Exception as error:
             logger.error(f"{self.session_name} | Unknown error when getting List of tasks: {error}")
             return None
@@ -185,9 +187,7 @@ class Claimer:
                     list_of_tasks = await self.get_list_of_tasks(http_client=http_client)
                     await asyncio.sleep(delay=random_sleep)
 
-                    list_of_tasks_daily_code = list_of_tasks['tasks']['daily']
-                    #print(list_of_tasks_daily_code)
-
+                    list_of_tasks_daily_code = list_of_tasks.get('tasks').get('daily')
                     if list_of_tasks_daily_code:
                         daily_tasks_max_amount, daily_tasks_done_amount, daily_tasks_current_day = get_daily_reward_task(list_of_tasks_daily_code)
 
